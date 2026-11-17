@@ -1,0 +1,45 @@
+# FocusNote visual system
+
+- Feeling: calm, readable, paper-like; content takes priority over chrome.
+- `NoteStyle.paper`: warm off-white / charcoal page surface, never behind system toolbars.
+- `NoteStyle.rule`: quiet row divider; semantic primary color adapts to appearance and contrast.
+- Text: system primary/secondary; system body and caption sizes; large title for the selected day.
+- Task titles and entry/rename fields use `NoteStyle.noteFont` (system body, the original typography). No installed custom font is required.
+- Accent: system selection and focus; the document itself stays monochrome.
+- Spacing: `Space` only; 20 pt page margins, 12 pt row gaps, 24 pt between heading and list.
+- Rows: minimum 76 pt, with native checkbox, title, target, and accessible action menu.
+- Daily content has two leading-aligned sections, To Do and To Remember, separated by 20 pt. Section headings expose accessibility header traits and per-section checkbox counts.
+- To Remember rows are 44 pt minimum, with checkbox, note text, and Delete Note menu only. No play button, focus plan, or timer metadata.
+- Controls: native Button, Toggle, Menu, Stepper, and DatePicker; never imitate controls with shapes.
+- Titles truncate with full-title help. Double-click starts inline editing; Return and an accessibility action provide non-pointer alternatives. No Rename menu action.
+- Task entry uses Return to save, Escape to cancel, and keeps an empty field ready for the next task. No inline Add confirmation button.
+- Focus Plan popover: Pomodoros, focus duration, short break, long break. Save Plan commits all settings together; Cancel discards drafts. All durations are whole minutes.
+- Focus Plan stays 360 × 300 pt while editing. Explanatory paragraphs are removed; validation reserves 32 pt even when empty so clearing a numeric field never moves controls.
+- Short breaks go between planned Pomodoros. After the final one, offer the long break instead of another short break.
+- Empty sections: “Plan your focus here.” / “Keep small reminders here.”, with Add Task / Add Note. Return adds; Escape cancels. Opening an entry scrolls it into view.
+- No glass on the paper content; system toolbar and popovers retain native styling.
+- Destructive actions hide rather than erase tasks; register explicit Undo.
+- Completed-Pomodoro numbers come from completed focus attempts only, never breaks or cancelled focus.
+- A To Do checkbox fills at the final focus boundary, in the same save as the completed session. Do not wait for short or long breaks. A completed task keeps a timer icon while its final break is pending/running.
+- Draw progress from `Item.completedPomodoros`, a rebuildable history projection. Never fetch/filter the session database inside a timer/list body. The selected task remains a live cached model reference so edits still update.
+- Notes have manual completion and contribute zero planned Pomodoros. Their edit/delete/check actions never interrupt the active focus task.
+- Timer: `NoteStyle.timerBackground` gray surround, `clockBackgroundColor` white face, `clockTextColor` black monospaced digits. White/black are intentional inside the clock even in dark mode.
+- The clock is a static AppKit display with fixed text metrics, explicit resize/appearance invalidation, and one accessibility label/value. Native SwiftUI buttons/toggles retain focus and their system accent.
+- Timer panel is nonactivating and reusable, with pin/unpin, resize, drag, and Back to List. Closing it hides the display; it does not cancel focus.
+- Timer defaults to 180 × 192 pt of content, minimum 160 × 168 pt. `TimerLayout` scales digits and switches between icon and text controls. The footer keeps Auto centered, with list left and pin right.
+- Auto controls task entry, breaks, and subsequent focus together. Off means manual starts. Enabling it starts a ready timer, but does not silently resume an explicitly paused timer.
+- Work start/natural completion uses one 980 Hz three-beep burst (~0.78 s), with no repeated groups. Short/long break start/natural completion uses an original, bright iPhone-style message ding (~0.9 s), not a copied recording. Generated PCM plays at full app gain through normal output. Serial playback stays off-main. Mute stops playback/clears queued cues; previews use the same sounds. The user's system volume is never changed.
+- Final long-break completion (natural or skipped) replaces all timer controls with a centered checkmark and “All done”. The mark pops in, turns semantic system green after 220 ms, and holds before automatic dismissal at about 1.2 seconds. Reduce Motion shows the mark without scaling or animated color changes. Green is status, not another app accent.
+- Clock refreshes use one-shot, integer-boundary deadlines; no idle/paused polling. System audio runs on its own actor, never on the UI thread.
+- Four 25-minute Pomodoros have three 5-minute short breaks, then one 20-minute long break: 135 minutes total. Breaks never increment the completed-Pomodoro count.
+
+## History and Analytics
+- `DashboardStyle`: 12 pt card radius, 160 pt chart height, 36 pt calendar cells. Cards use native backgrounds and quiet borders, not glass. Layout stays on `Space`.
+- Today/History/Analytics use a native segmented picker. Analytics has no period tabs: Streaks, Plan consistency, and Planned vs actual appear on one scrolling page.
+- `DashboardStyle` owns adaptive/high-contrast analytics greens. Actual hours use solid green over pale-green planned hours, both starting at zero (never stacked). The semantic analytics palette deliberately does not inherit the app accent.
+- Heatmap: rolling 52 weeks, seven rows, 12 pt cells with 4 pt gaps. >80% uses green; >50% up to 80% uses light green; ≤50% uses neutral; no-plan days are outlined. Labels/tooltips expose exact date, time, and ratio; select a cell to inspect and navigate its week.
+- Weekly chart: Y-axis hours, X-axis Monday–Sunday. Planned average is gray dashed; actual average is green dotted. Matching text legends show exact averages. Current-week averages exclude future days; completed weeks use all seven days. Week arrows never advance beyond the current week.
+- Dashboard dates use the current reporting time zone, shown below charts. Saved list keys and their original/inferred time-zone labels do not move when browsing.
+- A read-only history card never reuses editable task controls. Copy actions create new tasks/notes, preserve the archive, and support Undo.
+- Paper rollover: three controlled two-half hinges, isolated to the paper viewport. `DashboardStyle.fold` controls motion; Reduce Motion uses a crossfade. Save first, animate second; navigation and entry are disabled only during that brief transition.
+- Large dashboards scroll naturally; heatmap scrolls horizontally to earlier weeks. Snapshot mode captures top and bottom states. Week navigation keeps the chart in view. Aggregate history off-main and publish cached value snapshots, not database fetches in chart drawing.
